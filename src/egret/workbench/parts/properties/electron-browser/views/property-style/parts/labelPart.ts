@@ -61,6 +61,7 @@ function getFonts(project: EgretProjectModel): IDropDownTextDataSource[] {
 enum PropertyTypes {
 	TEXT_COLOR = 'textColor',
 	FONT_FAMILY = 'fontFamily',
+	FONT_STYLE = 'style',
 	SIZE = 'size',
 	BOLD = 'bold',
 	ITALIC = 'italic',
@@ -152,6 +153,26 @@ export class LabelPart extends BasePart {
 						});
 					}
 					break;
+				case PropertyTypes.FONT_STYLE:
+					if (value.user != null) {
+						this.getStyles(value.user as any).then(datas => {
+							this.styleCombobx.setDatas(datas);
+							this.styleCombobx.setSelection(value.user as string);
+						});
+					} else if (value.default != null) {
+						this.getStyles().then(datas => {
+							this.styleCombobx.setDatas(datas);
+							this.styleCombobx.setSelection(null);
+							this.styleCombobx.prompt = value.default as string;
+						});
+					} else {
+						this.getStyles().then(datas => {
+							this.styleCombobx.setDatas(datas);
+							this.styleCombobx.setSelection(null);
+							this.styleCombobx.prompt = '-';
+						});
+					}
+					break;
 				case PropertyTypes.SIZE:
 					if (value.user != null) {
 						this.sizeInput.text = value.user as any;
@@ -237,6 +258,7 @@ export class LabelPart extends BasePart {
 		result[PropertyTypes.TEXT_COLOR] = getProperty(node, 'textColor');
 		//字体
 		result[PropertyTypes.FONT_FAMILY] = getProperty(node, 'fontFamily');
+		result[PropertyTypes.FONT_STYLE] = getProperty(node, 'style');
 		//字号
 		result[PropertyTypes.SIZE] = getProperty(node, 'size');
 		//粗体
@@ -277,10 +299,43 @@ export class LabelPart extends BasePart {
 		});
 	}
 
+	private getStyles(currentStyle: string = ''): Promise<IDropDownTextDataSource[]> {
+		return this.egretProjectService.ensureLoaded().then(() => {
+			if (typeof currentStyle != 'string') {
+				currentStyle = '';
+			}
+			// const project = this.egretProjectService.theme.getStyles();
+			// let fonts = getStyles(project);
+			let fontList = this.egretProjectService.theme.getStyles();
+			let fonts = []
+			for (let item of fontList) {
+				fonts.push({id: item, data: item})
+			}
+			// let list =  
+			let has = false;
+			if (!currentStyle) {
+				has = true;
+			} else {
+				for (let i = 0; i < fonts.length; i++) {
+					if (fonts[i].id == currentStyle) {
+						has = true;
+						break;
+					}
+				}
+			}
+			if (!has) {
+				fonts = fonts.concat();
+				fonts.push({ id: currentStyle, data: currentStyle });
+			}
+			return fonts;
+		});
+	}
+
 
 	private colorPicker = new ColorPicker();
 	private sizeInput = new NumberInput();
 	private fontCombobx = new ComboBox();
+	private styleCombobx = new ComboBox();
 
 	private boldButton = new ToggleIconButton();
 	private italicsButton = new ToggleIconButton();
@@ -321,6 +376,13 @@ export class LabelPart extends BasePart {
 		this.sizeInput.style.marginLeft = '6px';
 		this.toDisposes.push(this.sizeInput.onValueChanging(e=>this.sizeChanging_handler(Number.parseFloat(e))));
 		this.toDisposes.push(this.sizeInput.onValueChanged(e=>this.sizeChanged_handler(e ? Number.parseFloat(e) : null)));
+
+		this.styleCombobx.create(hGroup);
+		this.styleCombobx.style.flexGrow = '1';
+		this.styleCombobx.style.flexShrink = '1';
+		this.styleCombobx.style.marginLeft = '6px';
+		this.toDisposes.push(this.styleCombobx.onSelectChanged(e=>this.styleChanegd_handler(this.styleCombobx.getSelection())));
+
 		this.fontCombobx.create(hGroup);
 		this.fontCombobx.style.flexGrow = '1';
 		this.fontCombobx.style.flexShrink = '1';
@@ -462,6 +524,15 @@ export class LabelPart extends BasePart {
 		for(let i = 0;i<this.currentNodes.length;i++){
 			const node = this.currentNodes[i];
 			setPropertyStr(node,'fontFamily',value ? value.id : null);
+		}
+	}
+	private styleChanegd_handler(value:IDropDownTextDataSource):void{
+		if(!this.currentNodes){
+			return;
+		}
+		for(let i = 0;i<this.currentNodes.length;i++){
+			const node = this.currentNodes[i];
+			setPropertyStr(node,'style',value ? value.id : null);
 		}
 	}
 

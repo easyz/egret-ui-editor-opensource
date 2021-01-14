@@ -59,7 +59,10 @@
                     addScripts(scripts,callBack);
                 };
                 script.onerror = function(e){
-                    console.log(e);
+					console.log(e);
+					
+					script.onerror = null;
+                    addScripts(scripts,callBack);
                 }
                 script.src= src;
                 head.appendChild(script);
@@ -74,15 +77,19 @@
             uiLibPath,
             tweenPath,
             'libs/modules/res/res.js',
+            'libs/modules/game/game.js',
             'libs/api.js',
             'AssetAdapter.js',
             'Theme.js',
-            'Main.js'
+			'Main.js',
+			
+            projectRoot + '/euieditor/CustomClass.txt',
 		];
         addScripts(scripts,function(){
             var base = document.createElement("base");
             base.href=decodeURIComponent(projectRoot)+"/";
 			document.head.appendChild(base);
+			// egret.runEgret({ renderMode: "webgl", calculateCanvasScaleFactor:function(context) {return 1;}});
 			egret.runEgret({ calculateCanvasScaleFactor:function(context) {return 1;}});
 			window.parent.postMessage('egret_loaded:'+runtimeId,'*');
         });

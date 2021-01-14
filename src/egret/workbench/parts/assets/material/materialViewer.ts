@@ -656,7 +656,8 @@ export class MaterialDragAndDrop implements IDragAndDrop {
 			if (dragData instanceof TreeLeafNode) {
 				const leaf: TreeLeafNode = <TreeLeafNode>dragData;
 				if (leaf.resvo.type === TreeNodeType.SHEET) {
-					source = leaf.resvo.name + '.' + leaf.label;
+					// source = leaf.resvo.name + '.' + leaf.label;
+					source = leaf.label;
 				}
 			}
 		} else {

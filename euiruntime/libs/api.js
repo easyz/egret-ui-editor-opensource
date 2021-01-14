@@ -131,6 +131,9 @@ var registerTheme = function (getSkin, getStyle) {
 }
 
 var registerTSClass = function (className, classData, propertyData) {
+	if (window["CustomClass"] && window["CustomClass"][className]) {
+		return
+	}
 	var superClassName = classData ? classData["super"] : null;
 	var moduleList = className.split(".");
 	var classShortName = moduleList.pop();

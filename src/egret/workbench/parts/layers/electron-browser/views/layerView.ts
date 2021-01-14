@@ -26,6 +26,8 @@ import { IOperationBrowserService } from 'egret/platform/operations/common/opera
 import { EuiCommands } from 'egret/exts/exml-exts/exml/commands/euiCommands';
 import { TextInput } from 'egret/base/browser/ui/inputs';
 import { localize } from 'egret/base/localization/nls';
+import { PathUtil } from 'egret/exts/resdepot/common/utils/PathUtil';
+import { fstat } from 'fs-extra';
 
 export interface LayerViewRef {
 	test: HTMLDivElement;
@@ -279,7 +281,7 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 
 		const moduleAndPathName = this.exmlModel.getExmlConfig().getClassNameById(node.getName(), node.getNs());
 		if (node.getId()) {
-			defStrSum.sum += 'public ' + node.getId() + ':' + moduleAndPathName + ';\n';
+			defStrSum.sum += 'public ' + node.getId() + ': ' + moduleAndPathName + ';\n';
 		}
 		if (LayerPanelUtil.isContainer(node)) {
 			const count: number = node.getNumChildren();
@@ -586,8 +588,21 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 		this._disposeIcon.push(this.tsCopyIcon.onClick(e => {
 			if (this.exmlModel) {
 				clipboard.clear();
+
+				let fileName = ""
+				try {
+					let arr = (this.exmlModeService as any).currrentEditor.input.resource.path.split("/")
+					fileName = arr[arr.length - 1]
+				} catch (error) {
+					console.error(error)					
+				}
+
 				const allDefObj = { sum: '' };
+				allDefObj.sum += "///////////////////////////////////////////////////////\n"
+				allDefObj.sum += `// ${fileName} ${this.exmlModel.getClassName()}\n`
+				allDefObj.sum += "///////////////////////////////////////////////////////\n"
 				this.makeDefStr(this.exmlModel.getRootNode(), allDefObj);
+				allDefObj.sum += "///////////////////////////////////////////////////////\n"
 				clipboard.writeText(allDefObj.sum);
 			}
 		}));

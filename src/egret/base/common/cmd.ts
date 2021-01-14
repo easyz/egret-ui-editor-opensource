@@ -17,3 +17,19 @@ export function exec(command: string): Promise<string> {
 		});
 	});
 }
+
+export function exec2(command: string): Promise<string> {
+	return new Promise<string>((resolve, reject) => {
+		childProcess.exec(command, (error, stdout, stderr) => {
+			if (error) {
+				reject(error);
+			} else if (stdout) {
+				resolve(stdout);
+			} else if (stderr) {
+				reject(stderr);
+			} else {
+				resolve(stdout);
+			}
+		});
+	});
+}

@@ -134,4 +134,16 @@ export class ThemeEUI implements ITheme {
 		}
 		return null;
 	}
+
+	public getStyles(): string[] {
+		const styleMap: any = this.config ? this.config.styles : null;
+		if (styleMap) {
+			let list = []
+			for (let k in styleMap) {
+				list.push(k)
+			}
+			return list
+		}
+		return []
+	}
 }

@@ -21,4 +21,6 @@ export interface ITheme{
 	 * @param style 
 	 */
 	getStyleConfig(style:string):any;
+
+	getStyles(): string[];
 }

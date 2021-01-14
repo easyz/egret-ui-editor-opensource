@@ -1,4 +1,4 @@
-import { exec } from 'egret/base/common/cmd';
+import { exec, exec2 } from 'egret/base/common/cmd';
 import { ltrim } from 'egret/base/common/strings';
 import * as pathUtil from 'path';
 import { trim, trimLeft } from '../utils/strings';
@@ -125,12 +125,15 @@ export function versions(reload: boolean = false): Promise<VersionInfo[]> {
 	versionCaches = null;
 	if (!versionsPromise) {
 		versionsPromise = new Promise<VersionInfo[]>((resolve, reject) => {
-			exec('egret versions').then(data => {
+			exec2('egret versions').then(data => {
 				const versionInfos: VersionInfo[] = [];
 				if (data) {
 					const versions: string[] = data.split('\n');
 					for (let i = 0; i < versions.length; i++) {
 						const versionStr: string = versions[i];
+						if (!versionStr.startsWith("Egret")) {
+							continue
+						}
 						const tempArr: string[] = versionStr.split(' ');
 						//前2位为Egret Engine 并不需要
 						tempArr.splice(0, 2);
