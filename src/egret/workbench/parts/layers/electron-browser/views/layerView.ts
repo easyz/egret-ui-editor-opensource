@@ -276,12 +276,12 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 	/**
 	* 制作定义文本
 	*/
-	private makeDefStr(node: INode, defStrSum: { sum: string }): void {
+	private makeDefStr(node: INode, defStrSum: { sum: string[] }): void {
 		if (!node) { return; }
 
 		const moduleAndPathName = this.exmlModel.getExmlConfig().getClassNameById(node.getName(), node.getNs());
 		if (node.getId()) {
-			defStrSum.sum += 'public ' + node.getId() + ': ' + moduleAndPathName + ';\n';
+			defStrSum.sum.push('public ' + node.getId() + ': ' + moduleAndPathName + ';');
 		}
 		if (LayerPanelUtil.isContainer(node)) {
 			const count: number = node.getNumChildren();
@@ -507,11 +507,11 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 		const controller = this.instantiationService.createInstance(DomLayerTreeController);
 		controller.copySelectDefCallback = (elements) => {
 			clipboard.clear();
-			const defObj = { sum: '' };
+			const defObj = { sum: [] };
 			elements.forEach((element) => {
 				this.makeDefStr(element, defObj);
 			});
-			clipboard.writeText(defObj.sum);
+			clipboard.writeText(defObj.sum.join("\n"));
 		};
 		const sorter = this.instantiationService.createInstance(DomLayerTreeSorter);
 		this.layerTreeDnd = this.instantiationService.createInstance(DomLayerTreeDragAndDrop);
@@ -597,13 +597,16 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 					console.error(error)					
 				}
 
-				const allDefObj = { sum: '' };
-				allDefObj.sum += "///////////////////////////////////////////////////////\n"
-				allDefObj.sum += `// ${fileName} ${this.exmlModel.getClassName()}\n`
-				allDefObj.sum += "///////////////////////////////////////////////////////\n"
+				const allDefObj = { sum: [] };
+				allDefObj.sum.push("///////////////////////////////////////////////////////")
+				allDefObj.sum.push(`// ${fileName} ${this.exmlModel.getClassName()}`)
+				allDefObj.sum.push("///////////////////////////////////////////////////////")
 				this.makeDefStr(this.exmlModel.getRootNode(), allDefObj);
-				allDefObj.sum += "///////////////////////////////////////////////////////\n"
-				clipboard.writeText(allDefObj.sum);
+				allDefObj.sum.push("///////////////////////////////////////////////////////")
+				for (let i = 0; i < allDefObj.sum.length; i++) {
+					allDefObj.sum[i] = "\t" + allDefObj.sum[i]
+				}
+				clipboard.writeText(allDefObj.sum.join("\n"));
 			}
 		}));
 
