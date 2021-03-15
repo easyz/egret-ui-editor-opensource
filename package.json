@@ -1,6 +1,6 @@
 {
     "name": "egret-ui-editor",
-    "version": "2.11.4",
+    "version": "2.11.5",
     "main": "./out/main.js",
     "author": "Egret Technology Inc",
     "description": "Egret UI Editor",
