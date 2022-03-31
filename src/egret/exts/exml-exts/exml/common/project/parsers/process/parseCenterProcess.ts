@@ -78,6 +78,12 @@ export class ParseCenterProcess implements IParseCenter {
 				folders.push(path.join(workspace, 'src'));
 				folders.push(path.join(workspace, 'libs'));
 			}
+			const packageList = tsConfig.config['package_libs'];
+			if (packageList) {
+				for (const element of packageList) {
+					folders.push(path.join(workspace, element));
+				}
+			}
 		} catch (error) {
 			console.error(error);
 		}

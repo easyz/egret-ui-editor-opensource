@@ -492,6 +492,10 @@ export class Item {
 
 				for (let i = 0, len = elements.length; i < len; i++) {
 					let element = elements[i];
+					if (element.name == ".svn") {
+						console.log("ignoe .svn")
+						continue;
+					}
 					let id = this.context.dataSource.getId(this.context.tree, element);
 					let item = staleItems[id] || new Item(id, this.registry, this.context, this.lock, element);
 					item.element = element;
