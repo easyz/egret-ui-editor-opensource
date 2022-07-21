@@ -5,7 +5,7 @@ import { ILifecycleService } from 'egret/platform/lifecycle/electron-main/lifecy
 import { IBrowserWindowEx, IWindowConfiguration } from '../common/window';
 import { mixin } from 'egret/base/common/objects';
 import { BrowserWindowEx } from './browserWindowEx';
-import { dialog, ipcMain as ipc } from 'electron';
+import { dialog, app, ipcMain as ipc } from 'electron';
 import { isMacintosh } from 'egret/base/common/platform';
 import { normalizeNFC } from 'egret/base/common/strings';
 import * as fs from 'fs';
@@ -16,6 +16,7 @@ import { ResdepotWindow } from './resdepotWindow';
 import URI from 'egret/base/common/uri';
 import { getEUIProject } from 'egret/platform/environment/node/environmentService';
 
+export const RECENT_OPNED_FOLDER: string = 'recentOpenedFolder';
 export const LAST_OPNED_FOLDER: string = 'lastOpenedFolder';
 
 class WindowInstance {
@@ -164,6 +165,8 @@ export class WindowsMainService implements IWindowsMainService {
 							targetIntance.closeRes();
 							targetIntance.mainWindow.load(configuration);
 							targetIntance.openedFolderUri = URI.file(options.folderPath);
+
+							this.AddRecentFolder(options.folderPath)
 						}
 					});
 				} else {
@@ -214,6 +217,35 @@ export class WindowsMainService implements IWindowsMainService {
 		this.lifecycleService.registerWindow(mainWindow);
 		this.openedWindows.push(this.instantiationService.createInstance(WindowInstance, mainWindow, options.folderPath ? URI.file(options.folderPath) : null));
 		console.log('window instance, total: ', this.openedWindows.length);
+
+		if (options.folderPath) {
+			this.AddRecentFolder(options.folderPath)
+		}
+	}
+
+	private AddRecentFolder(folderPath: string) {
+		let list = this.GetRecentFolder()
+		let index = list.indexOf(folderPath)
+		if (index != -1) {
+			list.splice(index, 1)
+		}
+		list.unshift(folderPath)
+		this.stateService.setItem(RECENT_OPNED_FOLDER, JSON.stringify(list));
+
+		console.log("addRecentDocument => " + folderPath)
+	}
+
+	public GetRecentFolder(): string[] {
+		let list = []
+		let content = this.stateService.getItem(RECENT_OPNED_FOLDER) as string || "";
+		if (content) {
+			try {
+				list = JSON.parse(content) || []
+			} catch (error) {
+				list = []
+			}
+		}
+		return list
 	}
 
 	private openResWindow(mainWindowId: number, options: IOpenBrowserWindowOptions): void {

@@ -213,6 +213,7 @@ export class AppMenu extends MenuBase {
 	private setFileMenu(fileMenu: Electron.Menu): void {
 		const open = this.createMenuItem(mnemonicMenuLabel(localize('menus.setFileMenu.openFolder', 'Open Egret Project(&&P)')), 'CmdOrCtrl+O', RootCommands.OPEN_FOLDER, localize('menus.setFileMenu.openFolderTxt', 'Open Egret Project'), localize('menus.setFileMenu.openFolderOpt', 'Open egret project operation'));
 		const newWindow = new MenuItem({ label: mnemonicMenuLabel(localize('menus.setFileMenu.openNewWindow', 'New Window')), click: () => this.windowsMainService.openNewWindow() });
+		const recentProject = this.GetRecentProject();
 		const createFolder = this.createMenuItem(mnemonicMenuLabel(localize('menus.setFileMenu.newFolder', 'Create Folder(&&F)')), 'Shift+CmdOrCtrl+N', FileRootCommands.NEW_FOLDER, localize('menus.setFileMenu.newFolderTxt', 'Create Folder'), localize('menus.setFileMenu.newFolderOpt', 'Create a folder in the currently selected directory'));
 		const createExml = this.createMenuItem(mnemonicMenuLabel(localize('menus.setFileMenu.newExml', 'Create EXML Skin(&&N)')), 'CmdOrCtrl+N', FileRootCommands.NEW_EXML_FILE, localize('menus.setFileMenu.newExmlTxt', 'Create EXML Skin'), localize('menus.setFileMenu.newExmlOpt', 'Create a new Exml skin in the currently selected directory'));
 
@@ -222,8 +223,7 @@ export class AppMenu extends MenuBase {
 		const closeCurrent = this.createMenuItem(mnemonicMenuLabel(localize('menus.setFileMenu.closeEditor', 'Close Editor(&&C)')), 'CmdOrCtrl+W', RootCommands.CLOSE_CURRENT, localize('menus.setFileMenu.closeEditorTxt', 'Close Editor'), localize('menus.setFileMenu.closeEditorOpt', 'Close the current editor'));
 
 		const reload = this.createMenuItem(mnemonicMenuLabel(localize('menus.setFileMenu.reload', 'Reload(&&R)')), '', FileRootCommands.RELOAD, null, null);
-		const memus = [open, newWindow, __separator__(), createFolder, createExml, __separator__(), save, saveAll, __separator__(), closeCurrent, __separator__(), reload];
-
+		const memus = [open, newWindow, recentProject, __separator__(), createFolder, createExml, __separator__(), save, saveAll, __separator__(), closeCurrent, __separator__(), reload];
 
 		if (isMacintosh) {
 			const installShellCommand = this.createMenuItem(mnemonicMenuLabel(localize('menus.setFileMenu.installShellCommand', 'Install shell command')), '', FileRootCommands.INSTALL_SHELL_COMMAND, null, null);
@@ -240,6 +240,22 @@ export class AppMenu extends MenuBase {
 
 		memus.forEach(item => fileMenu.append(item));
 	}
+
+	private GetRecentProject(): Electron.MenuItem {
+
+		let list = this.windowsMainService.GetRecentFolder()
+		const menus = new Menu();
+		for (let item of list) {
+			let path = item;
+			menus.append(new MenuItem({ label: path, click: (menuItem, browserWindow, event) => {
+				this.windowsMainService.open({
+					folderPath: path
+				});
+			}}))
+		}
+		return new MenuItem({ label: "最近目录", role: "recentDocuments", submenu: menus });
+	}
+
 	/**
 	 * 首选项菜单
 	 */

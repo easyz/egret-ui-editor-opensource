@@ -157,4 +157,7 @@ export interface IWindowsMainService {
 	 * 得到所有窗体
 	 */
 	getAllWindows():IBrowserWindowEx[];
+
+
+	GetRecentFolder(): string[]
 }

@@ -54,5 +54,19 @@
         "typescript": "^4.0.2",
         "webpack": "^4.44.1",
         "webpack-cli": "^3.3.12"
-    }
+    },
+	"build": {
+		"appId": "com.fjgame.euieditor",
+		"productName": "egret-ui-editor",
+		"win": {
+			"target": [
+				"nsis"
+			]
+		},
+		"nsis": {
+			"oneClick": false,
+			"perMachine": true,
+			"allowToChangeInstallationDirectory": true
+		}
+	}
 }
