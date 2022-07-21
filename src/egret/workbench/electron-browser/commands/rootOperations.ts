@@ -115,7 +115,7 @@ export class CheckUpdateOperation implements IOperation {
 	 * 运行
 	 */
 	public run(): Promise<any> {
-		onLauncherTask(Launcher.checkAppUpdate(AppId.EUIEditor));
+		// onLauncherTask(Launcher.checkAppUpdate(AppId.EUIEditor));
 		return Promise.resolve(void 0);
 	}
 	/**

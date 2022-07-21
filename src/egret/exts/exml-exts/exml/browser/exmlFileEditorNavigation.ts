@@ -243,6 +243,7 @@ export class ExmlFileEditorNavigation {
 		this.lockGroupBtn = new ToggleIconButton(this.funcContainer);
 		this.lockGroupBtn.iconClass = 'lockgroup-icon';
 		this.lockGroupBtn.onSelectedChanged(() => this._onLockGroupChanged.fire(this.lockGroupBtn.selected));
+		this.lockGroupBtn.selected = true;
 
 		this.adsorbBtn = new ToggleIconButton(this.funcContainer);
 		this.adsorbBtn.toolTip = localize('exml.editor.adsorbentTips', 'Adsorbent');
