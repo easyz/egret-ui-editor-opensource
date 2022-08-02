@@ -180,6 +180,12 @@ export class LifecycleService implements ILifecycleService {
 
 	private onBeforeUnloadWindowInRenderer(window: IBrowserWindowEx, reload: boolean): Promise<boolean> {
 		return new Promise<boolean>(c => {
+
+			if (window.isUrlType) {
+				c(false)
+				return;
+			}
+
 			const oneTimeEventToken = this.oneTimeListenerTokenGenerator++;
 			const okChannel = `egret:ok${oneTimeEventToken}`;
 			const cancelChannel = `egret:cancel${oneTimeEventToken}`;
@@ -207,6 +213,11 @@ export class LifecycleService implements ILifecycleService {
 
 	private onWillUnloadWindowInRenderer(window: IBrowserWindowEx, reload: boolean): Promise<void> {
 		return new Promise<void>(c => {
+			if (window.isUrlType) {
+				c(void 0)
+				
+				return
+			}
 			const oneTimeEventToken = this.oneTimeListenerTokenGenerator++;
 			const replyChannel = `egret:reply${oneTimeEventToken}`;
 			ipc.once(replyChannel, () => c(void 0));

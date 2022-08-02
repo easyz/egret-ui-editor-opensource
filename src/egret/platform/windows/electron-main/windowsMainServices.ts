@@ -83,6 +83,17 @@ class WindowInstance {
 		return Promise.resolve(true);
 	}
 
+	public async closeWindowList(): Promise<boolean> {
+		for (let key in this.windowList) {
+			let win = this.windowList[key]
+			let closed = await this.closeWindow(win)
+			if (closed) {
+				this.windowList[key]
+			}
+		}
+		return Promise.resolve(true);
+	}
+
 	private closeWindow(window: IBrowserWindowEx): Promise<boolean> {
 		return this.lifecycleService.unload(window, false).then(veto => {
 			if (!veto) {
@@ -316,8 +327,18 @@ export class WindowsMainService implements IWindowsMainService {
 				instance.resWindow = null;
 				break;
 			}
+
+			for (let key in instance.windowList) {
+				let win = instance.windowList[key]
+				if (win === window) {
+					delete instance.windowList[key]
+					break
+				}
+			}
+
 			if (instance.mainWindow === window) {
 				instance.closeRes();
+				instance.closeWindowList();
 				this.openedWindows.splice(i, 1);
 				break;
 			}
@@ -394,6 +415,12 @@ export class WindowsMainService implements IWindowsMainService {
 			if (instance.resWindow && instance.resWindow.isFocus()) {
 				return instance.resWindow;
 			}
+			for (let key in instance.windowList) {
+				let win = instance.windowList[key]
+				if (win.isFocus()) {
+					return win
+				}
+			}
 		}
 		return null;
 	}
@@ -409,6 +436,12 @@ export class WindowsMainService implements IWindowsMainService {
 			if (instance.resWindow && instance.resWindow.id === id) {
 				return instance.resWindow;
 			}
+			for (let key in instance.windowList) {
+				let win = instance.windowList[key]
+				if (win.id === id) {
+					return win
+				}
+			}
 		}
 		return null;
 	}
@@ -422,6 +455,10 @@ export class WindowsMainService implements IWindowsMainService {
 			all.push(instance.mainWindow);
 			if (instance.resWindow) {
 				all.push(instance.resWindow);
+			}
+			for (let key in instance.windowList) {
+				let win = instance.windowList[key]
+				all.push(win);
 			}
 		}
 		return all;

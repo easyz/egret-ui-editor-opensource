@@ -38,6 +38,7 @@ export interface IWindowConfiguration extends ParsedArgs {
  * 窗体接口
  */
 export interface IBrowserWindowEx {
+	isUrlType: boolean
 	/**
 	 * 窗体的id
 	 */

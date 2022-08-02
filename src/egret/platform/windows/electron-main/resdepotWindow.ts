@@ -35,6 +35,7 @@ export class ResdepotWindow extends BrowserWindowEx {
 }
 
 export class UrlWindow extends BrowserWindowEx {
+	isUrlType = true
 	/**
 	 *
 	 */
