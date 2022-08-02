@@ -68,6 +68,8 @@ export interface IEditorService {
 	 * @param file 
 	 */
 	openResEditor(file: URI): Promise<void>;
+
+	OpenByUrl(url: string): Promise<void>;
 }
 
 export interface IMultiPageEditor {

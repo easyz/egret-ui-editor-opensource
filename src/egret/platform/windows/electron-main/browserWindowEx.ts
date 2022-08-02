@@ -181,6 +181,9 @@ export class BrowserWindowEx implements IBrowserWindowEx {
 
 	protected getUrl(windowConfiguration: IWindowConfiguration): string {
 		windowConfiguration.windowId = this._win.id;
+		if (windowConfiguration.loadUrl) {
+			return windowConfiguration.loadUrl
+		}
 		const environment = parseArgs(process.argv);
 		const config = assign(environment, windowConfiguration);
 		return `file://${path.join(app.getAppPath(), './out/egret/workbench/electron-browser/bootstrap/index.html')}?config=${encodeURIComponent(JSON.stringify(config))}`;

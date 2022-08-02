@@ -22,6 +22,7 @@ import { AnimationView } from 'egret/workbench/parts/animation/electron-browser/
 import { IMultiPageEditor } from 'egret/editor/core/editors';
 import { BackgroundSettingPanel } from './exmleditor/background/BackgroundSettingPanel';
 import { DataBindingPanel } from './exmleditor/databinding/databindingPanel';
+import { IEgretProjectService } from '../../project';
 
 //TODO 销毁方法
 /**
@@ -33,6 +34,7 @@ export class ExmlFileEditor extends BaseEditor implements IExmlViewContainer, IC
 		@IInstantiationService protected instantiationService: IInstantiationService,
 		@IWorkbenchEditorService protected editorService: IWorkbenchEditorService,
 		@IWorkspaceService private workspaceService: IWorkspaceService,
+		@IEgretProjectService protected egretProjectService: IEgretProjectService,
 		@IOperationBrowserService protected operationService: IOperationBrowserService
 	) {
 		super(instantiationService, editorService);
@@ -306,6 +308,29 @@ export class ExmlFileEditor extends BaseEditor implements IExmlViewContainer, IC
 		this.navigation.onGrabChanged(e => this.grabChanged_handler(e));
 		this.navigation.onBackgroundClick(e => this.backgroundClick_handler());
 		this.navigation.onDataBindingClick(e => this.dataBindingClick_handler());
+
+		let htmlpreview
+		this.navigation.onhtmlPreviewClick(() => {
+			if (htmlpreview) {
+				this.editorService.OpenByUrl(htmlpreview)
+			}
+		});
+
+		this.navigation.htmlPreviewBtn.style.display = 'display';
+		this.egretProjectService.ensureLoaded().then(() => {
+			const customConfig = this.egretProjectService.projectModel.getEgretProperties().customConfig
+			if (customConfig) {
+				if (customConfig.htmlpreview) {
+					htmlpreview = customConfig.htmlpreview;
+				}
+			}
+			console.log(htmlpreview)
+			if (!htmlpreview) {
+				this.navigation.htmlPreviewBtn.style.display = 'none';
+			} else {
+				this.navigation.htmlPreviewBtn.style.display = 'display';
+			}
+		})
 
 		this.stateBarContainer = document.createElement('div');
 		this.stateBarContainer.style.width = '100%';

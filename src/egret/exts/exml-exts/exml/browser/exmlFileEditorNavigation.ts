@@ -18,6 +18,7 @@ export class ExmlFileEditorNavigation {
 	private _onEditModeChanged: Emitter<EditMode>;
 	private _onPreviewOptionChanged: Emitter<void>;
 	private _onRefreshClick: Emitter<void>;
+	private _onhtmlPreviewClick: Emitter<void>;
 	private _onDataBindingClick: Emitter<void>;
 	private _onBackgroundClick: Emitter<void>;
 	private _onZoomInClick: Emitter<void>;
@@ -35,6 +36,7 @@ export class ExmlFileEditorNavigation {
 	constructor(container: HTMLElement) {
 		this._onEditModeChanged = new Emitter<EditMode>();
 		this._onRefreshClick = new Emitter<void>();
+		this._onhtmlPreviewClick = new Emitter<void>();
 		this._onPreviewOptionChanged = new Emitter<void>();
 		this._onZoomInClick = new Emitter<void>();
 		this._onZoomOutClick = new Emitter<void>();
@@ -63,6 +65,10 @@ export class ExmlFileEditorNavigation {
 	/** 刷新按钮点击 */
 	public get onRefreshClick(): Event<void> {
 		return this._onRefreshClick.event;
+	}
+	/** 刷新按钮点击 */
+	public get onhtmlPreviewClick(): Event<void> {
+		return this._onhtmlPreviewClick.event;
 	}
 	/** 绑定测试数据按钮点击 */
 	public get onDataBindingClick(): Event<void> {
@@ -106,6 +112,7 @@ export class ExmlFileEditorNavigation {
 	private modeTabbar: Tabbar;
 	private modeDataSources: DataSource[] = [];
 	private refreshBtn: IconButton;
+	public htmlPreviewBtn: IconButton;
 
 	private mobileFitContainer: HGroup;
 	private deviceSelect: Select;
@@ -174,6 +181,14 @@ export class ExmlFileEditorNavigation {
 		this.refreshBtn.iconClass = 'refresh-icon';
 		this.refreshBtn.style.marginLeft = '6px';
 		this.refreshBtn.onClick(e => this.refreshClick_handler());
+
+		let htmlPreviewBtn = this.htmlPreviewBtn = new IconButton(container);
+		htmlPreviewBtn.toolTip = "";
+		htmlPreviewBtn.iconClass = 'htmlpreview-icon';
+		htmlPreviewBtn.style.marginLeft = '6px';
+		htmlPreviewBtn.style.backgroundSize = '65px 15px';
+		htmlPreviewBtn.style.width = '65px';
+		htmlPreviewBtn.onClick(e => this.htmlPreviewClick_handler());
 
 		this.mobileFitContainer = new HGroup(container);
 		this.mobileFitContainer.style.marginLeft = '10px';
@@ -387,6 +402,10 @@ export class ExmlFileEditorNavigation {
 
 	private refreshClick_handler(): void {
 		this._onRefreshClick.fire(void 0);
+	}
+
+	private htmlPreviewClick_handler(): void {
+		this._onhtmlPreviewClick.fire(void 0);
 	}
 
 	private dataBindingClick_handler(): void {

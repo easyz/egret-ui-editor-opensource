@@ -62,7 +62,7 @@ export class EgretProjectModel {
 	}
 	private egretProperties: any = null;
 	private egretPropertiesParserd: boolean = false;
-	private getEgretProperties(): any {
+	public getEgretProperties(): any {
 		if (!this.egretPropertiesParserd) {
 			this.egretPropertiesParserd = true;
 			try {

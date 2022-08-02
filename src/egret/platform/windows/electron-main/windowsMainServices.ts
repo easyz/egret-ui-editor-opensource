@@ -12,7 +12,7 @@ import * as fs from 'fs';
 import { IStateService } from '../../state/common/state';
 import { dirname, normalize, isEqual } from '../../../base/common/paths';
 import { localize } from '../../../base/localization/nls';
-import { ResdepotWindow } from './resdepotWindow';
+import { ResdepotWindow, UrlWindow } from './resdepotWindow';
 import URI from 'egret/base/common/uri';
 import { getEUIProject } from 'egret/platform/environment/node/environmentService';
 
@@ -22,13 +22,14 @@ export const LAST_OPNED_FOLDER: string = 'lastOpenedFolder';
 class WindowInstance {
 	public openedFolderUri: URI | null;
 	public resWindow?: IBrowserWindowEx;
+	public windowList: { [key: string]: IBrowserWindowEx } = {}
 	/**
 	 *
 	 */
 	constructor(public mainWindow: IBrowserWindowEx,
 		openedFolderUri: URI | null,
 		@IInstantiationService private instantiationService: IInstantiationService,
-		@ILifecycleService private lifecycleService: ILifecycleService, ) {
+		@ILifecycleService private lifecycleService: ILifecycleService,) {
 		this.openedFolderUri = openedFolderUri;
 	}
 
@@ -38,6 +39,11 @@ class WindowInstance {
 		}
 		if (this.resWindow && this.resWindow.id === id) {
 			return this.resWindow;
+		}
+		for (let key in this.windowList) {
+			if (this.windowList[key].id == id) {
+				return this.windowList[key]
+			}
 		}
 		return null;
 	}
@@ -51,6 +57,19 @@ class WindowInstance {
 		this.resWindow = this.instantiationService.createInstance(ResdepotWindow, 'res', false);
 		this.resWindow.load(configuration);
 		this.lifecycleService.registerWindow(this.resWindow);
+	}
+
+
+	public openWindowByUrl(configuration: IWindowConfiguration): void {
+		let win = this.windowList[configuration.loadUrl]
+		if (win) {
+			win.send('egret:openResEditor', configuration.file);
+			win.focus();
+			return;
+		}
+		win = this.windowList[configuration.loadUrl] = this.instantiationService.createInstance(UrlWindow, 'res', false);
+		win.load(configuration);
+		this.lifecycleService.registerWindow(win);
 	}
 
 	public async closeRes(): Promise<boolean> {
@@ -75,6 +94,11 @@ class WindowInstance {
 
 	public async close(): Promise<boolean> {
 		await this.closeRes();
+		for (let key in this.windowList) {
+			let win = this.windowList[key]
+			delete this.windowList[key]
+			await this.closeWindow(win)
+		}
 		return await this.closeWindow(this.mainWindow);
 	}
 }
@@ -124,6 +148,14 @@ export class WindowsMainService implements IWindowsMainService {
 				file: data.file
 			};
 			this.openResWindow(data.windowId, options);
+		});
+		ipc.on('egret:openWindowByUrl', (event, data: { windowId: number, folderPath: string, url: string }) => {
+			const options: IOpenBrowserWindowOptions = {
+				cli: this.environmentService.args,
+				folderPath: data.folderPath,
+				loadUrl: data.url,
+			};
+			this.openMainWindowByUrl(data.windowId, options);
 		});
 	}
 
@@ -248,6 +280,15 @@ export class WindowsMainService implements IWindowsMainService {
 		return list
 	}
 
+
+	public openMainWindowByUrl(mainWindowId: number, options: IOpenBrowserWindowOptions): void {
+		const configuration: IWindowConfiguration = this.getConfiguration(options);
+		const instance = this.getWindowInstance(mainWindowId);
+		if (instance) {
+			instance.openWindowByUrl(configuration);
+		}
+	}
+
 	private openResWindow(mainWindowId: number, options: IOpenBrowserWindowOptions): void {
 		const configuration: IWindowConfiguration = this.getConfiguration(options);
 		const instance = this.getWindowInstance(mainWindowId);
@@ -263,6 +304,7 @@ export class WindowsMainService implements IWindowsMainService {
 		configuration.execPath = process.execPath;
 		configuration.folderPath = options.folderPath;
 		configuration.file = options.file;
+		configuration.loadUrl = options.loadUrl;
 
 		return configuration;
 	}
@@ -502,7 +544,7 @@ class Dialogs {
 			return paths;
 		}
 		return new Promise((resolve, reject) => {
-			dialog.showOpenDialog(window ? window.win : void 0, options).then((value)=> {
+			dialog.showOpenDialog(window ? window.win : void 0, options).then((value) => {
 				resolve(normalizePaths(value.filePaths));
 			});
 		});

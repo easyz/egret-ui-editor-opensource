@@ -33,3 +33,22 @@ export class ResdepotWindow extends BrowserWindowEx {
 		return `file://${path.join(app.getAppPath(), './out/egret/workbench/electron-browser/bootstrap/resdepot.html')}?config=${encodeURIComponent(JSON.stringify(config))}`;
 	}
 }
+
+export class UrlWindow extends BrowserWindowEx {
+	/**
+	 *
+	 */
+	constructor(windowId: string,
+		newWindow: boolean,
+		@IInstantiationService private instantiationService: IInstantiationService,
+		@IEnvironmentService environmentService: IEnvironmentService) {
+		super(windowId, true, environmentService);
+		this.instantiationService.createInstance(ResMenu, this._win);		
+	}
+	
+	protected initWindow(newWindow: boolean): void {
+		super.initWindow(newWindow);
+		this._win.setTitle('Editor');
+		this._win.removeMenu();
+	}
+}

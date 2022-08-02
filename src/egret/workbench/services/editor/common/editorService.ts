@@ -71,6 +71,16 @@ export class WorkbenchEditorService implements IWorkbenchEditorService {
 	public getOpenEditors(): IEditor[] {
 		return this.editorPart.getOpenEditors();
 	}
+
+	public OpenByUrl(url: string): Promise<void> {
+		ipcRenderer.send('egret:openWindowByUrl', {
+			windowId: this.windowService.getCurrentWindowId(),
+			folderPath: this.workspaceService.getWorkspace().uri.fsPath,
+			url: url
+		});
+		return Promise.resolve();
+	}
+
 	/**
 	 * 打开res编辑器
 	 * @param file 
@@ -83,6 +93,7 @@ export class WorkbenchEditorService implements IWorkbenchEditorService {
 		});
 		return Promise.resolve();
 	}
+
 	/**
 	 * 通过输入流打开一个编辑器，如果已经打开了这个编辑器则激活
 	 * @param input 输入流

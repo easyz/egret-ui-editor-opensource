@@ -13,6 +13,8 @@ export interface IOpenBrowserWindowOptions {
 	folderPath?: string;
 	/** 要打开的文件，该值只从eui命令行获取 */
 	file?: string;
+
+	loadUrl?: string
 }
 
 /**

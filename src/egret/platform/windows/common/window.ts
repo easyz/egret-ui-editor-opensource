@@ -30,6 +30,8 @@ export interface IWindowConfiguration extends ParsedArgs {
 	folderPath: string;
 	/** 要打开的文件 */
 	file?: string;
+
+	loadUrl?: string
 }
 
 /**
