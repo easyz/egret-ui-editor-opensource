@@ -495,7 +495,8 @@ export class MaterialController extends DefaultController implements IController
 			if (this.selectedItem instanceof TreeLeafNode) {
 				let leaf: TreeLeafNode = this.selectedItem;
 				if (leaf.resvo.type === ResType.TYPE_SHEET) {
-						clipboard.writeText(leaf.resvo.name + '.' + leaf.label);
+						// clipboard.writeText(leaf.resvo.name + '.' + leaf.label);
+						clipboard.writeText(leaf.label);
 				} else {
 					clipboard.writeText(leaf.resvo.name);
 				}

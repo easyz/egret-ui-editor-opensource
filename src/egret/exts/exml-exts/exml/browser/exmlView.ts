@@ -636,8 +636,8 @@ export class ExmlView implements IExmlView {
 
 	private updateDesignBackgroundLayer(): void {
 		if (this.exmlEditor.focusRectLayer.egretContentHost) {
-			this.designBackgroundLayer.style.width = this.exmlEditor.focusRectLayer.stageWidth + 'px';
-			this.designBackgroundLayer.style.height = this.exmlEditor.focusRectLayer.stageHeight + 'px';
+			// this.designBackgroundLayer.style.width = this.exmlEditor.focusRectLayer.stageWidth + 'px';
+			// this.designBackgroundLayer.style.height = this.exmlEditor.focusRectLayer.stageHeight + 'px';
 			const rootTarget = this.exmlEditor.focusRectLayer.egretContentHost.getTarget();
 			const m: Matrix = rootTarget.matrix;
 			this.designBackgroundLayer.style.transform = 'matrix(' + m.a + ',' + m.b + ',' + m.c + ',' + m.d + ',' + m.tx + ',' + m.ty + ')';
@@ -663,6 +663,9 @@ export class ExmlView implements IExmlView {
 						image = 'url(\'' + image + '\')';
 					}
 					this.designBackgroundLayer.style.backgroundImage = image;
+
+					this.designBackgroundLayer.style.width = configModel.backgroundWidth + 'px';
+					this.designBackgroundLayer.style.height = configModel.backgroundHeight + 'px';
 				}
 				else {
 					this.designBackgroundLayer.style.backgroundImage = '';
