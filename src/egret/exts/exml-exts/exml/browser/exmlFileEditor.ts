@@ -34,7 +34,7 @@ export class ExmlFileEditor extends BaseEditor implements IExmlViewContainer, IC
 		@IInstantiationService protected instantiationService: IInstantiationService,
 		@IWorkbenchEditorService protected editorService: IWorkbenchEditorService,
 		@IWorkspaceService private workspaceService: IWorkspaceService,
-		@IEgretProjectService protected egretProjectService: IEgretProjectService,
+		@IEgretProjectService public egretProjectService: IEgretProjectService,
 		@IOperationBrowserService protected operationService: IOperationBrowserService
 	) {
 		super(instantiationService, editorService);

@@ -28,11 +28,15 @@ import { TextInput } from 'egret/base/browser/ui/inputs';
 import { localize } from 'egret/base/localization/nls';
 import { PathUtil } from 'egret/exts/resdepot/common/utils/PathUtil';
 import { fstat } from 'fs-extra';
+import * as path from 'path';
+import * as fs from 'fs';
+import { INotificationService } from 'egret/platform/notification/common/notifications';
 
 export interface LayerViewRef {
 	test: HTMLDivElement;
 }
 
+const FLAG = "///////////////////////////////////////////////////////"
 
 /**对象层级面板 
 */
@@ -64,8 +68,9 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 		@IInstantiationService private instantiationService: IInstantiationService,
 		@IExmlModelServices private exmlModeService: IExmlModelServices,
 		@IOperationBrowserService private operationService: IOperationBrowserService,
-		@IWorkbenchEditorService private workbenchEditorService:IWorkbenchEditorService
-		) {
+		@IWorkbenchEditorService private workbenchEditorService: IWorkbenchEditorService,
+		@INotificationService private notificationService: INotificationService
+	) {
 
 		super(instantiationService);
 		this.keyboard_handler = this.keyboard_handler.bind(this);
@@ -179,15 +184,15 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 		}
 		this.exmlModel = exmlModel;
 		if (this.exmlModel) {
-			this._dispose.push(this.exmlModel.onNodeAdded(e=>this.onLayerChanged(false)));
-			this._dispose.push(this.exmlModel.onNodeRemoved(e=>this.onLayerChanged(false)));
-			this._dispose.push(this.exmlModel.onRootChanged(e=>this.onLayerChanged(true)));
-			this._dispose.push(this.exmlModel.onTreeChanged(e=>this.onTreeChanged(e)));
+			this._dispose.push(this.exmlModel.onNodeAdded(e => this.onLayerChanged(false)));
+			this._dispose.push(this.exmlModel.onNodeRemoved(e => this.onLayerChanged(false)));
+			this._dispose.push(this.exmlModel.onRootChanged(e => this.onLayerChanged(true)));
+			this._dispose.push(this.exmlModel.onTreeChanged(e => this.onTreeChanged(e)));
 			this._dispose.push(this.exmlModel.onSelectedListChanged(this.onSelectedNodesChange));
 			this.exmlModelHelper.setModel(exmlModel);
 			this.layerTreeDnd.setModel(exmlModel);
 		}
-		this.updateTree(true,true);
+		this.updateTree(true, true);
 	}
 
 	private onSelectedNodesChange = (event: any): void => {
@@ -231,14 +236,14 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 
 	private layerChangeFlag = false;
 	private layerChangedStamp = null;
-	private onLayerChanged = (refreshed:boolean): void => {
-		if(refreshed){
-			if(this.layerChangedStamp){
+	private onLayerChanged = (refreshed: boolean): void => {
+		if (refreshed) {
+			if (this.layerChangedStamp) {
 				clearTimeout(this.layerChangedStamp);
 			}
 			this.layerChangedStamp = null;
 			this.doLayerChanged(true);
-		}else{
+		} else {
 			if (!this.layerChangeFlag) {
 				this.layerChangeFlag = true;
 				this.layerChangedStamp = setTimeout(() => {
@@ -249,8 +254,8 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 		}
 	}
 
-	private doLayerChanged(refreshed:boolean): void {
-		this.updateTree(false,refreshed);
+	private doLayerChanged(refreshed: boolean): void {
+		this.updateTree(false, refreshed);
 	}
 
 	private changeState(value) {
@@ -357,7 +362,7 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 
 
 
-	private updateTree(recoverSelection: boolean,refreshed:boolean): void {
+	private updateTree(recoverSelection: boolean, refreshed: boolean): void {
 		if (!this.exmlModel) {
 			this.tree.setInput(null).then(() => {
 				this.tree.layout();
@@ -408,11 +413,11 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 			const existPos = this.tree.getScrollPosition();
 
 
-			const existExpanedsPath:number[][] = [];
+			const existExpanedsPath: number[][] = [];
 			this.tree.getExpandedElements().forEach((each) => {
 				existExpanedsPath.push(LayerPanelUtil.getPathByNode(each));
 			});
-			const existSelectionsPath:number[][] = [];
+			const existSelectionsPath: number[][] = [];
 			this.tree.getSelection().forEach((each) => {
 				existSelectionsPath.push(LayerPanelUtil.getPathByNode(each));
 			});
@@ -420,7 +425,7 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 
 			this.tree.setInput(this.exmlModel.getRootNode()).then(() => {
 				let toExpands: INode[] = [];
-				const toSelections:INode[] = [];
+				const toSelections: INode[] = [];
 				let layerScrollPosCache = 0;
 				if (recoverSelection) {
 					const layerExpandListPathCache = this.exmlModel.temporaryData.layerExpandList;
@@ -433,7 +438,7 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 					});
 				} else {
 					layerScrollPosCache = existPos;
-					if(refreshed){
+					if (refreshed) {
 						existExpanedsPath.forEach((path) => {
 							const node = LayerPanelUtil.getNodeByPath(this.exmlModel.getRootNode(), path);
 							if (node && LayerPanelUtil.isContainer(node)) {
@@ -446,7 +451,7 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 								toSelections.push(node);
 							}
 						});
-					}else{
+					} else {
 						toExpands = existExpaneds.concat();
 					}
 				}
@@ -528,12 +533,12 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 			{
 				twistiePixels: 23,
 			});
-		this.tree.getHTMLElement().addEventListener('keydown',this.keyboard_handler);
-		this.tree.getHTMLElement().addEventListener('keyup',this.keyboard_handler);
+		this.tree.getHTMLElement().addEventListener('keydown', this.keyboard_handler);
+		this.tree.getHTMLElement().addEventListener('keyup', this.keyboard_handler);
 	}
-	private keyboard_handler(e:KeyboardEvent):void{
+	private keyboard_handler(e: KeyboardEvent): void {
 		const editor = this.workbenchEditorService.getActiveEditor();
-		if(editor instanceof ExmlFileEditor){
+		if (editor instanceof ExmlFileEditor) {
 			editor.notifyKeyboardEvent(e);
 		}
 	}
@@ -594,19 +599,26 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 					let arr = (this.exmlModeService as any).currrentEditor.input.resource.path.split("/")
 					fileName = arr[arr.length - 1]
 				} catch (error) {
-					console.error(error)					
+					console.error(error)
 				}
 
+				const header = `// ${fileName} ${this.exmlModel.getClassName()}`
 				const allDefObj = { sum: [] };
-				allDefObj.sum.push("///////////////////////////////////////////////////////")
-				allDefObj.sum.push(`// ${fileName} ${this.exmlModel.getClassName()}`)
-				allDefObj.sum.push("///////////////////////////////////////////////////////")
+				allDefObj.sum.push(FLAG)
+				allDefObj.sum.push(header)
+				allDefObj.sum.push(FLAG)
 				this.makeDefStr(this.exmlModel.getRootNode(), allDefObj);
-				allDefObj.sum.push("///////////////////////////////////////////////////////")
+				allDefObj.sum.push(FLAG)
+				const headercontent = allDefObj.sum.join("\n")
+
 				for (let i = 0; i < allDefObj.sum.length; i++) {
 					allDefObj.sum[i] = "\t" + allDefObj.sum[i]
 				}
-				clipboard.writeText(allDefObj.sum.join("\n"));
+
+				const contentclipboard = allDefObj.sum.join("\n")
+				clipboard.writeText(contentclipboard);
+
+				this.outputExmlId(header, headercontent)
 			}
 		}));
 
@@ -625,6 +637,130 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 				this.exmlModel && this.exmlModelHelper.unGroupNodes();
 			}
 		}));
+	}
+
+	private outputExmlId(header: string, content: string) {
+		const headerClsName = header.split(".exml ")[1].trim().replace(".", "_")
+		if (!headerClsName) {
+			return
+		}
+
+		const editor = this.workbenchEditorService.getActiveEditor();
+		if (editor instanceof ExmlFileEditor) {
+			const customConfig = editor.egretProjectService.projectModel.getEgretProperties().customConfig
+			if (customConfig && customConfig.outputExmlId) {
+				const packageDir = path.join(editor.egretProjectService.projectModel.project.fsPath, 'package');
+				let __packageList = window["__packageList"] = {}
+				if (fs.existsSync(packageDir)) {
+					for (let dirName of fs.readdirSync(packageDir)) {
+						const defPath = path.join(packageDir, dirName, "src", "ModuleDef.ts");
+						if (fs.existsSync(defPath)) {
+							let findState = 0
+							let outContent = []
+							for (let line of fs.readFileSync(defPath, { encoding: "utf8" }).split("\n")) {
+								if (findState == 0) {
+									if (line.indexOf("const ModuleSkin") != -1) {
+										findState = 1
+										outContent.push(line)
+									}
+								} else if (findState == 1) {
+									outContent.push(line)
+									if (line.indexOf("}") != -1) {
+										break
+									}
+								}
+							}
+							if (outContent.length) {
+								window["__packageList"][dirName] = {}
+								let str = outContent.join("\n").replace("export", "")
+								str = str.replace("const", `window.__packageList.${dirName}.`)
+								// console.log(str)
+								eval(str)
+								// console.log(window["__packageList"])
+							}
+						}
+					}
+				}
+
+				let __packageSkin = {}
+				for (let packageName in __packageList) {
+					let ModuleSkin = __packageList[packageName].ModuleSkin
+					if (ModuleSkin) {
+						for (let key2 in ModuleSkin) {
+							__packageSkin[ModuleSkin[key2]] = packageName
+						}
+					}
+				}
+
+				let filePath = path.join(editor.egretProjectService.projectModel.project.fsPath, 'src', 'ExmlIdDef.d.ts');
+				if (__packageSkin[headerClsName]) {
+					filePath = path.join(packageDir, __packageSkin[headerClsName], 'src', 'ExmlIdDef.d.ts');
+				}
+				console.log(filePath)
+				
+				let headerDatas = {}
+				if (fs.existsSync(filePath)) {
+					let state = 0;
+
+					let headerType = ""
+					let headerContent = []
+					for (let line of fs.readFileSync(filePath, { encoding: "utf8" }).split("\n")) {
+						if (line == FLAG) {
+							switch (state) {
+								case 0:
+									state = 1
+									headerContent = []
+									headerContent.push(line)
+									break
+								case 2:
+									state = 3
+									headerContent.push(line)
+									break
+								case 3:
+									state = 0
+									headerContent.push(line)
+									headerDatas[headerType] = headerContent.join("\n");
+									break
+							}
+						} else {
+							switch (state) {
+								case 1:
+									headerType = line
+									state = 2
+									headerContent.push(line)
+									break
+								case 3:
+									headerContent.push(line)
+									break
+							}
+						}
+					}
+				}
+
+				headerDatas[header] = content
+				let outContent = []
+				for (let key of Object.keys(headerDatas).sort()) {
+					const clsName = key.split(".exml ")[1].trim().replace(".", "_")
+					outContent.push(`export type ${clsName} = {
+${headerDatas[key].replace(/public /g, "")}
+}`)
+				}
+
+				const template = `// 以下内容是自动生成的，请不要手动修改！！！
+
+declare namespace exmlId {
+
+${outContent.join("\n\n")}
+}
+`
+				fs.writeFileSync(filePath, template, { encoding: "utf8" })
+
+				console.log("输出成功")
+
+				this.notificationService.info({ content: "导出声明文件", duration: 1 });
+
+			}
+		}
 	}
 
 	private setIconDisplay(b: boolean): void {

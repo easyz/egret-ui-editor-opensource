@@ -62,7 +62,7 @@ export class EgretProjectModel {
 	}
 	private egretProperties: any = null;
 	private egretPropertiesParserd: boolean = false;
-	public getEgretProperties(): any {
+	public getEgretProperties(): { customConfig: { htmlpreview: string, outputExmlId: boolean } } {
 		if (!this.egretPropertiesParserd) {
 			this.egretPropertiesParserd = true;
 			try {
@@ -157,8 +157,8 @@ export class EgretProjectModel {
 	}
 
 	/**
-     * 目标工程的路径
-     */
+	 * 目标工程的路径
+	 */
 	public get project(): URI {
 		return this._project;
 	}
@@ -310,12 +310,12 @@ export class EgretProjectModel {
 			for (const key in properties) {
 				if (properties.hasOwnProperty(key)) {
 					const element = properties[key];
-					if(Object.keys(element).length === 0) {
+					if (Object.keys(element).length === 0) {
 						delete properties[key];
 					}
 				}
 			}
-			fs.mkdirSync(path.dirname(this.exmlPropertiesUri.fsPath), { recursive: true});
+			fs.mkdirSync(path.dirname(this.exmlPropertiesUri.fsPath), { recursive: true });
 			fs.writeFileSync(this.exmlPropertiesUri.fsPath, JSON.stringify(properties, null, 2));
 		}, 100);
 	}
@@ -362,12 +362,12 @@ export class EgretProjectModel {
 	public needRefreshProject(filePath: string): boolean {
 		//检查到如果是egretProperties文件发生了变化，则将已解析的标识设置为false
 		const fileUri = URI.file(filePath);
-		if(isEqual(fileUri, this.egretPropertiesUri)) {
+		if (isEqual(fileUri, this.egretPropertiesUri)) {
 			this.egretPropertiesParserd = false;
 			this._exmlRoots = null;
 			return true;
 		}
-		if(isEqual(fileUri, this.wingPropertiesUri)) {
+		if (isEqual(fileUri, this.wingPropertiesUri)) {
 			this.wingPropertiesParserd = false;
 			return true;
 		}
@@ -386,7 +386,7 @@ export class EgretProjectModel {
 		}
 		const fileUri = URI.file(filePath);
 		const themeUri = URI.file(path.join(this._project.fsPath, this.theme.fsPath));
-		if(isEqual(fileUri, themeUri)) {
+		if (isEqual(fileUri, themeUri)) {
 			return true;
 		}
 		return false;
@@ -403,7 +403,7 @@ export class EgretProjectModel {
 		const fileUri = URI.file(filePath);
 		for (let i = 0; i < this.resConfigs.length; i++) {
 			const configUri = URI.file(path.join(this._project.fsPath, this.resConfigs[i].url));
-			if(isEqual(fileUri, configUri)) {
+			if (isEqual(fileUri, configUri)) {
 				return true;
 			}
 		}
