@@ -62,7 +62,7 @@ export class EgretProjectModel {
 	}
 	private egretProperties: any = null;
 	private egretPropertiesParserd: boolean = false;
-	public getEgretProperties(): { customConfig: { htmlpreview: string, outputExmlId: boolean } } {
+	public getEgretProperties(): { customConfig: { htmlpreview: string, outputExmlId: { ignore: string[] } } } {
 		if (!this.egretPropertiesParserd) {
 			this.egretPropertiesParserd = true;
 			try {

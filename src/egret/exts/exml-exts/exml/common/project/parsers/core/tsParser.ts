@@ -215,7 +215,7 @@ export class TsParser implements IDisposable {
 			const checker = program.getTypeChecker();
 			for (let i = 0; i < sourceCodes.length; i++) {
 				if (sourceCodes[i].fileName.indexOf('lib.d.ts') === -1) {
-					this.delintNode(sourceCodes[i], checker, inEgret(sourceCodes[i].fileName), inPrompt(sourceCodes[i].fileName));
+					this.delintNode(sourceCodes[i], checker, inEgret(sourceCodes[i].fileName), inPrompt(sourceCodes[i].fileName), sourceCodes[i].fileName);
 				}
 			}
 			this.cacheStamp = this.currentStamp;
@@ -223,7 +223,7 @@ export class TsParser implements IDisposable {
 		return this.tmpClassMap;
 	}
 	private tmpClassMap: { [className: string]: TempClassData } = {};
-	private delintNode(node: ts.Node, checker: ts.TypeChecker, inEngine: boolean = false, inPrompt: boolean = false): void {
+	private delintNode(node: ts.Node, checker: ts.TypeChecker, inEngine: boolean = false, inPrompt: boolean = false, fileName = ""): void {
 		if ((node.kind === ts.SyntaxKind.ClassDeclaration || node.kind === ts.SyntaxKind.InterfaceDeclaration) &&
 			this.isExport(node, checker)
 		) {
@@ -388,6 +388,7 @@ export class TsParser implements IDisposable {
 			classNode.inPrompt = inPrompt;
 			classNode.props = propList;
 			classNode.fullName = className;
+			classNode.fileName = fileName;
 			if (node.kind === ts.SyntaxKind.InterfaceDeclaration) {
 				classNode.isInterface = true;
 			}

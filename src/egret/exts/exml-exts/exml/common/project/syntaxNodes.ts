@@ -51,4 +51,6 @@ export class ClassNode {
 	 * 是否是接口
 	 */
 	public isInterface: boolean = false;
+
+	public fileName: string
 }

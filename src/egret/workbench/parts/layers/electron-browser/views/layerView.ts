@@ -618,7 +618,9 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 				const contentclipboard = allDefObj.sum.join("\n")
 				clipboard.writeText(contentclipboard);
 
+				let time = (new Date).getTime()
 				this.outputExmlId(header, headercontent)
+				console.log("输出耗时=>" + ((new Date).getTime() - time))
 			}
 		}));
 
@@ -646,121 +648,202 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 		}
 
 		const editor = this.workbenchEditorService.getActiveEditor();
-		if (editor instanceof ExmlFileEditor) {
-			const customConfig = editor.egretProjectService.projectModel.getEgretProperties().customConfig
-			if (customConfig && customConfig.outputExmlId) {
-				const packageDir = path.join(editor.egretProjectService.projectModel.project.fsPath, 'package');
-				let __packageList = window["__packageList"] = {}
-				if (fs.existsSync(packageDir)) {
-					for (let dirName of fs.readdirSync(packageDir)) {
-						const defPath = path.join(packageDir, dirName, "src", "ModuleDef.ts");
-						if (fs.existsSync(defPath)) {
-							let findState = 0
-							let outContent = []
-							for (let line of fs.readFileSync(defPath, { encoding: "utf8" }).split("\n")) {
-								if (findState == 0) {
-									if (line.indexOf("const ModuleSkin") != -1) {
-										findState = 1
-										outContent.push(line)
-									}
-								} else if (findState == 1) {
-									outContent.push(line)
-									if (line.indexOf("}") != -1) {
-										break
-									}
-								}
-							}
-							if (outContent.length) {
-								window["__packageList"][dirName] = {}
-								let str = outContent.join("\n").replace("export", "")
-								str = str.replace("const", `window.__packageList.${dirName}.`)
-								// console.log(str)
-								eval(str)
-								// console.log(window["__packageList"])
-							}
-						}
-					}
+		if (!(editor instanceof ExmlFileEditor)) {
+			return
+		}
+		
+		let projectFsPath = editor.egretProjectService.projectModel.project.fsPath;
+		function FindAllType(filePath: string, outList: string[]) {
+			if (fs.statSync(filePath).isDirectory()) {
+				for (let dirName of fs.readdirSync(filePath)) {
+					FindAllType(path.join(filePath, dirName), outList)
 				}
-
-				let __packageSkin = {}
-				for (let packageName in __packageList) {
-					let ModuleSkin = __packageList[packageName].ModuleSkin
-					if (ModuleSkin) {
-						for (let key2 in ModuleSkin) {
-							__packageSkin[ModuleSkin[key2]] = packageName
-						}
-					}
+			} else {
+				if (filePath.endsWith(".ts") && !filePath.endsWith(".d.ts")) {
+					// outList.push(filePath.substring(projectFsPath.length + 1))
+					outList.push(filePath)
 				}
-
-				let filePath = path.join(editor.egretProjectService.projectModel.project.fsPath, 'src', 'ExmlIdDef.d.ts');
-				if (__packageSkin[headerClsName]) {
-					filePath = path.join(packageDir, __packageSkin[headerClsName], 'src', 'ExmlIdDef.d.ts');
-				}
-				console.log(filePath)
-				
-				let headerDatas = {}
-				if (fs.existsSync(filePath)) {
-					let state = 0;
-
-					let headerType = ""
-					let headerContent = []
-					for (let line of fs.readFileSync(filePath, { encoding: "utf8" }).split("\n")) {
-						if (line == FLAG) {
-							switch (state) {
-								case 0:
-									state = 1
-									headerContent = []
-									headerContent.push(line)
-									break
-								case 2:
-									state = 3
-									headerContent.push(line)
-									break
-								case 3:
-									state = 0
-									headerContent.push(line)
-									headerDatas[headerType] = headerContent.join("\n");
-									break
-							}
-						} else {
-							switch (state) {
-								case 1:
-									headerType = line
-									state = 2
-									headerContent.push(line)
-									break
-								case 3:
-									headerContent.push(line)
-									break
-							}
-						}
-					}
-				}
-
-				headerDatas[header] = content
-				let outContent = []
-				for (let key of Object.keys(headerDatas).sort()) {
-					const clsName = key.split(".exml ")[1].trim().replace(".", "_")
-					outContent.push(`export type ${clsName} = {
-${headerDatas[key].replace(/public /g, "")}
-}`)
-				}
-
-				const template = `// 以下内容是自动生成的，请不要手动修改！！！
-
-declare namespace exmlId {
-
-${outContent.join("\n\n")}
-}
-`
-				fs.writeFileSync(filePath, template, { encoding: "utf8" })
-
-				console.log("输出成功")
-
-				this.notificationService.info({ content: "导出声明文件", duration: 1 });
-
 			}
 		}
+		let srcFileList = []
+		
+		const customConfig = editor.egretProjectService.projectModel.getEgretProperties().customConfig
+		if (!customConfig || !customConfig.outputExmlId) {
+			return
+		}
+
+		// const ignore = {}
+		content = content.replace(/public /g, "")
+		for (let item of customConfig.outputExmlId.ignore || []) {
+			// ignore[item] = 1
+			content = content.replace(item + ":", "//" + item + ":")
+		}
+		const packageDir = path.join(projectFsPath, 'package');
+		let __packageList = window["__packageList"] = {}
+		if (fs.existsSync(packageDir)) {
+			for (let dirName of fs.readdirSync(packageDir)) {
+				const defPath = path.join(packageDir, dirName, "src", "ModuleDef.ts");
+				if (fs.existsSync(defPath)) {
+					FindAllType(path.join(packageDir, dirName, "src"), srcFileList)
+					let findState = 0
+					let outContent = []
+					for (let line of fs.readFileSync(defPath, { encoding: "utf8" }).split("\n")) {
+						if (findState == 0) {
+							if (line.indexOf("const ModuleSkin") != -1) {
+								findState = 1
+								outContent.push(line)
+							}
+						} else if (findState == 1) {
+							outContent.push(line)
+							if (line.indexOf("}") != -1) {
+								break
+							}
+						}
+					}
+					if (outContent.length) {
+						window["__packageList"][dirName] = {}
+						let str = outContent.join("\n").replace("export", "")
+						str = str.replace("const", `window.__packageList.${dirName}.`)
+						// console.log(str)
+						eval(str)
+						// console.log(window["__packageList"])
+					}
+				}
+			}
+		}
+
+		let __packageSkin = {}
+		for (let packageName in __packageList) {
+			let ModuleSkin = __packageList[packageName].ModuleSkin
+			if (ModuleSkin) {
+				for (let key2 in ModuleSkin) {
+					__packageSkin[ModuleSkin[key2]] = packageName
+				}
+			}
+		}
+
+		FindAllType(path.join(projectFsPath, 'src'), srcFileList)
+
+		let time1 = (new Date).getTime()
+		// console.log(this.exmlModel.getExmlConfig().getProjectConfig().getClassNode("BasePanel"))
+		const euiTypeList = {}
+		for (let srcPath of srcFileList) {
+			let ret = fs.readFileSync(srcPath, { encoding: "utf8" }).match(/export\s+class\s+.*? /g)
+			if (ret && ret.length) {
+				for (let item of ret) {
+					euiTypeList[item.replace("export class", "").trim()] = srcPath.substring(projectFsPath.length + 1, srcPath.length - 3)
+				}
+			}
+		}
+
+		console.log(euiTypeList)
+
+		console.log("输出耗时 1 =>" + ((new Date).getTime() - time1))
+
+		let ispackagedef = false
+		let filePath = path.join(projectFsPath, 'src', 'ExmlIdDef.d.ts');
+		if (__packageSkin[headerClsName]) {
+			filePath = path.join(packageDir, __packageSkin[headerClsName], 'src', 'ExmlIdDef.d.ts');
+			ispackagedef = true
+		}
+
+		console.log(filePath)
+		let relFilePath = path.dirname(filePath.substring(projectFsPath.length + 1))
+
+		let headerDatas = {}
+		if (fs.existsSync(filePath)) {
+			let state = 0;
+
+			let headerType = ""
+			let headerContent = []
+			for (let line of fs.readFileSync(filePath, { encoding: "utf8" }).split("\n")) {
+				if (line == FLAG) {
+					switch (state) {
+						case 0:
+							state = 1
+							headerContent = []
+							headerContent.push(line)
+							break
+						case 2:
+							state = 3
+							headerContent.push(line)
+							break
+						case 3:
+							state = 0
+							headerContent.push(line)
+							headerDatas[headerType] = headerContent.join("\n");
+							break
+					}
+				} else {
+					switch (state) {
+						case 1:
+							headerType = line
+							state = 2
+							headerContent.push(line)
+							break
+						case 3:
+							headerContent.push(line)
+							break
+					}
+				}
+			}
+		}
+
+		headerDatas[header] = content
+		let outContent = []
+		let importContentDict = []
+		for (let key of Object.keys(headerDatas).sort()) {
+			const clsName = key.split(".exml ")[1].trim().replace(".", "_")
+			outContent.push(`export type ${clsName} = {
+${headerDatas[key]}
+}`)
+// ${headerDatas[key].replace(/public /g, "")}
+		}
+
+		let time2 = (new Date).getTime()
+		let outString = outContent.join("\n\n");
+		for (let type of outString.match(/:.*?;/g)) {
+			let typeName = type.substring(1, type.length - 1).trim()
+			let typePath = euiTypeList[typeName]
+			if (typePath) {
+				if (!ispackagedef && typePath.indexOf("package") != -1) {
+					console.error("不能引用package里的组件")
+					return
+				}
+
+				if (!importContentDict[typePath]) {
+					importContentDict[typePath] = {}
+				}
+				importContentDict[typePath][typeName] = 1
+			}
+		}
+		let importList = []
+		for (let k of Object.keys(importContentDict).sort()) {
+			let list = []
+			for (let k2 in importContentDict[k]) {
+				list.push(k2)
+			}
+			let relp = path.relative(relFilePath, k).replace(/\\/g, "/")
+			importList.push(`import { ${list.join(",")} } from "${relp[0] == "." ? relp : "./" + relp}";`)
+		}
+
+		console.log("输出耗时 2 =>" + ((new Date).getTime() - time2))
+
+		const template = `// 以下内容是自动生成的，请不要手动修改！！！
+
+${importList.join("\n")}
+
+export namespace exmlId {
+
+${outString}
+}
+`
+		fs.writeFileSync(filePath, template, { encoding: "utf8" })
+
+		console.log("输出成功")
+
+		this.notificationService.info({ content: "导出声明文件", duration: 1 });
+
 	}
 
 	private setIconDisplay(b: boolean): void {

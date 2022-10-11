@@ -323,7 +323,8 @@ class ParserProcess extends NodeProcess implements IParserProcess {
 				'baseClass': classNode.baseClass ? classNode.baseClass.fullName : '',
 				'implementeds': implementeds,
 				'props': classNode.props,
-				'isInterface': classNode.isInterface
+				'isInterface': classNode.isInterface,
+				'fileName': classNode.fileName,
 			};
 			classDataMap[fullName] = newClassData;
 		}

@@ -137,6 +137,7 @@ export class ParseCenterProcess implements IParseCenter {
 			const implementeds: string[] = classData['implementeds'];
 			classNode.props = classData['props'];
 			classNode.isInterface = classData['isInterface'];
+			classNode.fileName = classData['fileName'];
 			tempClassNodeMap[fullName] = {
 				baseClass: baseClass,
 				implementeds: implementeds,
