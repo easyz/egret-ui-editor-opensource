@@ -89,10 +89,30 @@
             var base = document.createElement("base");
             base.href=decodeURIComponent(projectRoot)+"/";
 			document.head.appendChild(base);
-			// egret.runEgret({ renderMode: "webgl", calculateCanvasScaleFactor:function(context) {return 1;}});
-			egret.runEgret({ calculateCanvasScaleFactor:function(context) {return 1;}});
+			if (window["USE_WEBGL"]) {
+				egret.runEgret({ renderMode: "webgl", calculateCanvasScaleFactor:function(context) {return 1;}});
+			} else {
+				egret.runEgret({ calculateCanvasScaleFactor:function(context) {return 1;}});
+			}
 			window.parent.postMessage('egret_loaded:'+runtimeId,'*');
+
+			ResetFunction()
         });
+
+
+		function ResetFunction() {
+			var WebGLRenderContext_getWebGLTexture = egret.web.WebGLRenderContext.prototype.getWebGLTexture
+			egret.web.WebGLRenderContext.prototype.getWebGLTexture = function (bitmapData) {
+				let src = bitmapData.source && bitmapData.source.src
+				let ret = WebGLRenderContext_getWebGLTexture.call(this, bitmapData)
+				if (src && !bitmapData.source) {
+					bitmapData.source = { src: src }
+					// console.log("save bitmap src")
+				}
+				return ret
+            };
+		}
+
 	</script>
 </body>
 
