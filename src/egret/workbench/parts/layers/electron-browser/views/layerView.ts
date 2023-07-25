@@ -682,45 +682,84 @@ export class LayerView extends PanelContentDom implements IModelRequirePart, IFo
 		let __packageList = window["__packageList"] = {}
 		if (fs.existsSync(packageDir)) {
 			for (let dirName of fs.readdirSync(packageDir)) {
-				const defPath = path.join(packageDir, dirName, "src", "ModuleDef.ts");
+
+				const defPath = path.join(packageDir, dirName, "src", "Def.ts");
 				if (fs.existsSync(defPath)) {
 					// FindAllType(path.join(packageDir, dirName, "src"), srcFileList)
 					let findState = 0
 					let outContent = []
 					for (let line of fs.readFileSync(defPath, { encoding: "utf8" }).split("\n")) {
 						if (findState == 0) {
-							if (line.indexOf("const ModuleSkin") != -1) {
+							if (line.indexOf("namespace SkinId") != -1) {
 								findState = 1
-								outContent.push(line)
 							}
 						} else if (findState == 1) {
-							outContent.push(line)
 							if (line.indexOf("}") != -1) {
 								break
 							}
+							outContent.push(line)
 						}
 					}
 					if (outContent.length) {
 						window["__packageList"][dirName] = {}
-						let str = outContent.join("\n").replace("export", "")
-						str = str.replace("const", `window.__packageList.${dirName}.`)
+						let str = outContent.join(",\n").replace(/export const/g, "")
+						str = str.replace(/=/g, ":")
+						str = `window.__packageList.${dirName}.ModuleSkin={
+							${str}
+						}`
 						// console.log(str)
 						eval(str)
 						// console.log(window["__packageList"])
 					}
 				}
+
+				// const defPath = path.join(packageDir, dirName, "src", "ModuleDef.ts");
+				// if (fs.existsSync(defPath)) {
+				// 	// FindAllType(path.join(packageDir, dirName, "src"), srcFileList)
+				// 	let findState = 0
+				// 	let outContent = []
+				// 	for (let line of fs.readFileSync(defPath, { encoding: "utf8" }).split("\n")) {
+				// 		if (findState == 0) {
+				// 			if (line.indexOf("const ModuleSkin") != -1) {
+				// 				findState = 1
+				// 				outContent.push(line)
+				// 			}
+				// 		} else if (findState == 1) {
+				// 			outContent.push(line)
+				// 			if (line.indexOf("}") != -1) {
+				// 				break
+				// 			}
+				// 		}
+				// 	}
+				// 	if (outContent.length) {
+				// 		window["__packageList"][dirName] = {}
+				// 		let str = outContent.join("\n").replace("export", "")
+				// 		str = str.replace("const", `window.__packageList.${dirName}.`)
+				// 		// console.log(str)
+				// 		eval(str)
+				// 		// console.log(window["__packageList"])
+				// 	}
+				// }
 			}
 		}
-
 		let __packageSkin = {}
 		for (let packageName in __packageList) {
 			let ModuleSkin = __packageList[packageName].ModuleSkin
 			if (ModuleSkin) {
 				for (let key2 in ModuleSkin) {
-					__packageSkin[ModuleSkin[key2]] = packageName
+					__packageSkin[key2] = packageName
 				}
 			}
 		}
+		// let __packageSkin = {}
+		// for (let packageName in __packageList) {
+		// 	let ModuleSkin = __packageList[packageName].ModuleSkin
+		// 	if (ModuleSkin) {
+		// 		for (let key2 in ModuleSkin) {
+		// 			__packageSkin[ModuleSkin[key2]] = packageName
+		// 		}
+		// 	}
+		// }
 
 		// FindAllType(path.join(projectFsPath, 'src'), srcFileList)
 
